@@ -1,0 +1,38 @@
+{
+  "name": "@salon/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc -b",
+    "typecheck": "tsc -b",
+    "migrate": "tsx src/db/migrate.ts",
+    "seed": "tsx src/db/seed.ts",
+    "openapi": "tsx src/openapi/emit.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.1",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/rate-limit": "^10.1.1",
+    "@fastify/swagger": "^9.2.0",
+    "@fastify/swagger-ui": "^5.1.0",
+    "@salon/contracts": "workspace:*",
+    "@salon/core": "workspace:*",
+    "drizzle-orm": "^0.36.0",
+    "fastify": "^5.1.0",
+    "fastify-plugin": "^5.0.1",
+    "luxon": "^3.5.0",
+    "pg": "^8.13.0",
+    "pino": "^9.5.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "@types/pg": "^8.11.10",
+    "pino-pretty": "^11.3.0"
+  }
+}

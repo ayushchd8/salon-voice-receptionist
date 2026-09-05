@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Salon Voice Receptionist</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div>
+          <h1 id="salon-name">Voice Receptionist</h1>
+          <p class="sub" id="salon-sub">Connecting…</p>
+        </div>
+        <div class="providers" id="providers"></div>
+      </header>
+
+      <main>
+        <section class="call">
+          <div class="controls">
+            <button id="start" class="primary">Start call</button>
+            <button id="mic" disabled>🎤 Hold to talk</button>
+            <button id="hangup" disabled class="danger">End call</button>
+          </div>
+
+          <p class="hint" id="hint">
+            Click <strong>Start call</strong>, then hold the mic button and speak — or type below
+            if your browser has no speech recognition.
+          </p>
+
+          <div class="status-row">
+            <span class="chip" id="status">idle</span>
+            <span class="chip state" id="state">—</span>
+            <span class="chip listening" id="listening" hidden>listening…</span>
+          </div>
+
+          <div class="transcript" id="transcript"></div>
+
+          <form class="composer" id="composer">
+            <input
+              id="text-input"
+              placeholder="…or type what you'd say and press enter"
+              autocomplete="off"
+              disabled
+            />
+            <button type="submit" disabled id="send">Send</button>
+          </form>
+        </section>
+
+        <aside class="inspector">
+          <h2>What the agent is doing</h2>
+          <p class="sub">
+            Tool calls, state transitions and guard trips, live. This is the same trail written to
+            the call summary the salon reviews afterwards.
+          </p>
+          <ol id="events" class="events"></ol>
+        </aside>
+      </main>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

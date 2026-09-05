@@ -1,0 +1,40 @@
+{
+  "name": "salon-voice-receptionist",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20.11" },
+  "scripts": {
+    "db:up": "docker compose up -d db && node scripts/wait-for-db.mjs",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && pnpm db:up && pnpm migrate && pnpm seed",
+    "migrate": "pnpm --filter @salon/api migrate",
+    "seed": "pnpm --filter @salon/api seed",
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "pnpm --filter @salon/api dev",
+    "dev:agent": "pnpm --filter @salon/agent dev",
+    "dev:admin": "pnpm --filter @salon/admin dev",
+    "build": "pnpm -r build",
+    "typecheck": "tsc -b --pretty",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run packages",
+    "test:integration": "vitest run apps/api",
+    "test:agent": "vitest run apps/agent",
+    "test:boundaries": "node scripts/check-boundaries.mjs",
+    "openapi": "pnpm --filter @salon/api openapi",
+    "check": "pnpm lint && pnpm typecheck && pnpm test:boundaries && pnpm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/node": "^22.8.0",
+    "eslint": "^9.13.0",
+    "globals": "^15.11.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.11.0",
+    "vitest": "^2.1.0"
+  }
+}
