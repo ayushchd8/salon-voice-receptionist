@@ -12,10 +12,18 @@ It holds no database credentials. That boundary is enforced by a build check, no
   staff browser  ─────────────────────https──────▶
 ```
 
-- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — design, ERD, conversation state machine, assumptions
-- [`API.md`](./API.md) — endpoint reference, error codes, idempotency semantics
-- [`SCALING.md`](./SCALING.md) — what production would need
-- [`docs/openapi.json`](./docs/openapi.json) — generated spec (also served at `/docs`)
+## Documentation
+
+| | |
+|---|---|
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Design, system and entity diagrams, conversation state machine, assumptions, and a log of every defect found in live use with the reasoning behind each fix |
+| [`API.md`](./API.md) | Endpoint reference, error codes, idempotency and tenancy semantics |
+| [`EXAMPLES.md`](./EXAMPLES.md) | Six real captured call transcripts — booking, unavailable time, cancel, reschedule, an API failure, and a correction |
+| [`DEMO.md`](./DEMO.md) | Five-minute live demo script |
+| [`PRODUCTION.md`](./PRODUCTION.md) | Limitations, scaling, monitoring, security, future improvements |
+| [`SCALING.md`](./SCALING.md) | Infrastructure detail behind the production summary |
+| [`AI_USAGE.md`](./AI_USAGE.md) | How AI coding tools were used, and what was reviewed |
+| [`docs/openapi.json`](./docs/openapi.json) | Generated OpenAPI spec — also served at `/docs` |
 
 ---
 
@@ -86,6 +94,10 @@ box; everything behind it — tools, state machine, guards — is identical.
 Open <http://localhost:4100>, click **Start call**, then hold the mic button and speak. The
 panel on the right shows every tool call, state transition and guard trip as it happens.
 
+**[`DEMO.md`](./DEMO.md) is a five-minute guided walkthrough** covering all of the below plus a
+deliberate database failure. [`EXAMPLES.md`](./EXAMPLES.md) has the same conversations as real
+captured transcripts if you would rather read than run.
+
 The demo caller ID is Eleanor's number, so she is recognised by name. Things worth trying:
 
 | Say | What it exercises |
@@ -111,7 +123,7 @@ transcript and the agent's full tool trail — including the ones that failed.
 | `pnpm dev:api` / `dev:agent` / `dev:admin` | One service |
 | `pnpm db:up` / `db:down` / `db:reset` | PostgreSQL lifecycle |
 | `pnpm migrate` / `pnpm seed` | Schema and demo data |
-| `pnpm test` | All 255 tests |
+| `pnpm test` | All 256 tests |
 | `pnpm test:unit` | Domain engine only — no database needed |
 | `pnpm test:integration` | CRM API against real PostgreSQL |
 | `pnpm test:agent` | Conversation flows against a controllable fake CRM |
@@ -126,14 +138,14 @@ transcript and the agent's full tool trail — including the ones that failed.
 pnpm db:up && pnpm check
 ```
 
-255 tests across three levels, each at the boundary where it belongs:
+256 tests across three levels, each at the boundary where it belongs:
 
 - **88 unit tests** (`packages/core`) — availability, buffers, policy, DST, fuzzy time, phone
   normalisation. Pure functions over fixtures; no database, no clock.
 - **60 integration tests** (`apps/api`) — against real PostgreSQL, because the behaviour under
   test *is* PostgreSQL behaviour. Includes an eight-way concurrent booking race asserting that
   exactly one wins, and schema-drift checks that the Drizzle types still match the SQL.
-- **107 conversation tests** (`apps/agent`) — the full agent over real HTTP against a CRM that
+- **108 conversation tests** (`apps/agent`) — the full agent over real HTTP against a CRM that
   can be told to time out, fail once, or lose a slot mid-conversation.
 
 The integration suite uses a separate `salon_test` database, created automatically.

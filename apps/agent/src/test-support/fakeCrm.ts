@@ -21,6 +21,7 @@ import {
   computeAvailability,
   computeBlockRange,
   findAlternatives,
+  openIntervalsForDate,
   resolveTimeExpression,
   speakableLabel,
   type BusyBlock,
@@ -137,12 +138,35 @@ export class FakeCrm {
     return appointment;
   }
 
+  private inFlight = 0;
+
+  /**
+   * Wait until no request is still being handled.
+   *
+   * This is one shared server for the whole suite, so a request issued by a
+   * test that has already finished can land during the next one and corrupt its
+   * fixtures — which is exactly what happened: a booking from an earlier test
+   * arrived after `reset()`, and a later test saw two appointments where it
+   * expected one. Waiting for quiet before resetting keeps each test genuinely
+   * isolated, which is better than loosening assertions to tolerate the noise.
+   */
+  async quiesce(timeoutMs = 2_000): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (this.inFlight > 0 && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 5));
+    }
+  }
+
   async start(): Promise<void> {
     this.server = createServer((req, res) => {
       const chunks: Buffer[] = [];
       req.on('data', (c) => chunks.push(c));
       req.on('end', () => {
-        void this.handle(req.url ?? '', req.method ?? 'GET', Buffer.concat(chunks).toString(), req.headers, res);
+        this.inFlight += 1;
+        void this.handle(req.url ?? '', req.method ?? 'GET', Buffer.concat(chunks).toString(), req.headers, res)
+          .finally(() => {
+            this.inFlight -= 1;
+          });
       });
     });
 
@@ -298,7 +322,18 @@ export class FakeCrm {
         requestedWindow: { from: window.from, to: window.to, interpretation: window.interpretation },
         slots,
         alternatives,
-        unavailableReason: slots.length === 0 ? 'Fully booked in the window requested.' : null,
+        // Mirrors the real API's explainEmptyWindow: a closed day and a full
+        // diary are different facts, and the agent says different things about
+        // them. A fake that flattens the two would let that difference rot.
+        unavailableReason:
+          slots.length > 0
+            ? null
+            : openIntervalsForDate(
+                  DateTime.fromISO(window.from, { zone: TZ }).toFormat('yyyy-MM-dd'),
+                  CONTEXT,
+                ).length === 0
+              ? 'The salon is closed that day.'
+              : 'Fully booked in the window requested.',
       });
     }
 

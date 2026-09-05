@@ -127,13 +127,16 @@ describe('POST /v1/appointments — validation and policy', () => {
   });
 
   it('enforces the minimum notice period and says when the earliest slot is', async () => {
+    // The notice period is set absurdly long rather than the target time being
+    // set absurdly close. Picking "an hour from now" made this test depend on
+    // the wall clock *and* the day of the week — it passed in the morning and
+    // failed on a Saturday evening, when "tomorrow" is a Sunday and the salon is
+    // shut. Lead time is checked before opening hours, so a distant, perfectly
+    // valid slot isolates the rule under test.
+    const THIRTY_DAYS = 60 * 24 * 30;
     await resetDatabase();
     clearKeyCache();
-    salon = await seedTestSalon({ minLeadMinutes: 240 });
-
-    // Pick a time an hour from now that also falls inside opening hours.
-    const soon = DateTime.now().setZone('Europe/London').plus({ hours: 1 });
-    const target = soon.hour >= 9 && soon.hour < 17 ? soon : soon.plus({ days: 1 }).set({ hour: 10, minute: 0 });
+    salon = await seedTestSalon({ minLeadMinutes: THIRTY_DAYS });
 
     const res = await app.inject({
       method: 'POST',
@@ -142,19 +145,17 @@ describe('POST /v1/appointments — validation and policy', () => {
       payload: {
         customerId: salon.customerIds.eleanor,
         serviceId: salon.serviceIds.cut,
-        start: target.toUTC().toISO(),
+        start: futureSlot(2, '10:00'), // a Tuesday, comfortably inside opening hours
         source: 'voice',
       },
     });
 
     const err = body(res).error;
-    if (err.code === 'LEAD_TIME_TOO_SHORT') {
-      // The agent needs a concrete earliest time to offer, not just a refusal.
-      expect(err.details.earliestStart).toBeTruthy();
-      expect(err.details.minLeadMinutes).toBe(240);
-    } else {
-      expect(err.code).toBe('OUTSIDE_BUSINESS_HOURS');
-    }
+    expect(err.code).toBe('LEAD_TIME_TOO_SHORT');
+    // The agent needs a concrete earliest time to offer, not just a refusal.
+    expect(err.details.minLeadMinutes).toBe(THIRTY_DAYS);
+    expect(err.details.earliestStart).toBeTruthy();
+    expect(new Date(err.details.earliestStart as string).getTime()).toBeGreaterThan(Date.now());
   });
 
   it('rejects a staff member who does not offer the service', async () => {

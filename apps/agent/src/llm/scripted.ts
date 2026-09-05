@@ -376,9 +376,15 @@ export class ScriptedAdapter implements LlmAdapter {
     // Nothing free — offer alternatives rather than a dead end.
     if (result.available === false) {
       const alternatives = (result.alternatives ?? []) as Array<{ when: string }>;
+      // Use the reason the API gave. Telling someone the diary is full when the
+      // salon is simply shut that day is wrong information, and they will plan
+      // around it.
+      const why = typeof result.reason === 'string' && /closed/i.test(result.reason)
+        ? "we're closed that day"
+        : "we're full then";
       return alternatives.length > 0
-        ? { text: `I'm afraid we're full then. I could do ${alternatives.map((a) => a.when).join(', or ')}. Would any of those work?`, toolCalls: [] }
-        : { text: "I'm afraid there's nothing free around then. Is there another day that might work?", toolCalls: [] };
+        ? { text: `I'm afraid ${why}. I could do ${alternatives.map((a) => a.when).join(', or ')}. Would any of those work?`, toolCalls: [] }
+        : { text: `I'm afraid ${why}, and there's nothing free nearby. Is there another day that might work?`, toolCalls: [] };
     }
 
     // More than one appointment — ask, never guess.

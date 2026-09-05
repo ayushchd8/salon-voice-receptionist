@@ -58,10 +58,10 @@ against its Definition of Done before the next one starts.
 ## Phase 6 — Call outcomes, observability, tests, docs
 - [x] Structured call summary written for every call, in a `finally` block
 - [x] JSON logs with request_id / call_id / salon_id correlation and PII redaction
-- [x] 255 tests: 88 unit · 60 integration · 107 conversation
+- [x] 256 tests: 88 unit · 60 integration · 108 conversation
 - [x] README, ARCHITECTURE, API, SCALING, generated OpenAPI
 
 ---
 
 **Status: all phases complete.** `pnpm check` is green: lint, typecheck, architectural
-boundaries and 255 tests.
+boundaries and 256 tests.

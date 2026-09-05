@@ -52,7 +52,10 @@ beforeAll(async () => {
 afterAll(async () => {
   await crmServer.stop();
 });
-beforeEach(() => {
+beforeEach(async () => {
+  // Let any request from the previous test finish before wiping the fixtures,
+  // so a late arrival cannot corrupt this one.
+  await crmServer.quiesce();
   crmServer.reset();
 });
 
@@ -998,6 +1001,22 @@ describe('a time the caller names is the time they get', () => {
   ])('reads %j as %s local', async (spoken, expected) => {
     const { __testing } = await import('../llm/scripted.js');
     expect(__testing.spokenTimeToLocal(spoken)).toContain(expected);
+  });
+});
+
+describe('saying why a time is unavailable', () => {
+  it('says the salon is closed rather than claiming to be full', async () => {
+    // "We're full" when the doors are simply shut is wrong information, and a
+    // caller will plan around it.
+    const runner = await startCall();
+    await runner.handleUserTurn('I want to book a blow dry');
+    const sunday = await runner.handleUserTurn('sunday morning');
+
+    expect(sunday.utterance).toMatch(/closed that day/i);
+    expect(sunday.utterance).not.toMatch(/full/i);
+    // ...and it still offers a way forward.
+    expect(sunday.utterance).toMatch(/I could do|another day/i);
+    await runner.end();
   });
 });
 

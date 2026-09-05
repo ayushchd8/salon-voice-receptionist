@@ -156,7 +156,7 @@ real cost of the swap, and worth being explicit about rather than discovering la
 
 ## 7. CI/CD
 
-The pipeline is already expressible as `pnpm check`: lint → typecheck → boundaries → 255 tests.
+The pipeline is already expressible as `pnpm check`: lint → typecheck → boundaries → 256 tests.
 
 What to add:
 - Postgres service container for the integration suite (already parameterised via
