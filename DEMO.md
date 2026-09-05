@@ -120,55 +120,6 @@ the callback details.
 
 ---
 
-## Testing the second salon
-
-The seed creates **two** salons to prove that onboarding is a data change, not a
-code change. Bella Beauty Bar is in New York, prices in dollars, is **closed
-Mondays and open Sundays** (the inverse of Luxe), needs a full day's notice, has
-a 48-hour cancellation window and books on 30-minute boundaries.
-
-Everything is scoped by the credential, so switching salon is a matter of which
-key you present.
-
-**The CRM** — sign out and sign back in with Bella's staff key:
-
-```
-sk_staff_bella_2222222222222222222222222222
-```
-
-Same screens, different salon. Nothing else changes.
-
-**The phone line** — each salon needs its own agent process, exactly as each
-would have its own phone number in production. Leave Luxe running and start a
-second line on another port:
-
-```bash
-AGENT_PORT=4101 CRM_API_KEY=sk_agent_bella_1111111111111111111111111111 \
-  pnpm --filter @salon/agent dev
-```
-
-Then open <http://localhost:4101>. Bella's customers are Dana
-(`+12125550111`) and Luis (`+12125550112`), so change `callerPhone` in
-`apps/agent/public/app.js:190` to be recognised — otherwise you are an unknown
-caller and the agent will ask for your details, which is also worth seeing.
-
-Worth trying, because the answers come from Bella's own configuration:
-
-> *"What are your opening hours?"* — Tuesday to Wednesday 10:00–19:00, Thursday to
-> Friday 10:00–21:00, Saturday 09:00–18:00, Sunday 11:00–17:00, closed Mondays
-> *"Are you open on Mondays?"* — closed, unlike Luxe
-> *"How much is a balayage?"* — **USD** 285.00, a service Luxe does not offer
-> *"Can I book one next Wednesday afternoon?"* — slots land on **30-minute**
-> boundaries rather than Luxe's 15
-
-**Tenancy is enforced, not assumed.** Bella's key cannot see a Luxe customer or
-appointment — `salon_id` comes from the credential, never from a request, and
-composite `(id, salon_id)` foreign keys make a cross-tenant reference impossible
-at the storage layer. The isolation tests in
-`apps/api/src/routes/lifecycle.test.ts` try exactly that and expect a 404.
-
----
-
 ## What to look at afterwards
 
 | Where | What it shows |

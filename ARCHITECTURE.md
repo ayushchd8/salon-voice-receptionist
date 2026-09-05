@@ -471,7 +471,7 @@ Ambiguous requirements, resolved and recorded rather than silently decided:
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Scaffold, tooling, env, CI-style scripts, boundary fitness function | ✅ |
-| 1 | Data model, migrations, seed (two salons, config-only onboarding proven) | ✅ |
+| 1 | Data model, migrations, seed data | ✅ |
 | 2 | CRM API — 35 operations, auth, scopes, idempotency, error contract, OpenAPI | ✅ |
 | 3 | Admin UI — diary, customers, services, hours, policy, call review | ✅ |
 | 4 | Voice agent — state machine, tool layer, guards, browser voice client | ✅ |

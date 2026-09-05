@@ -19,8 +19,8 @@ against its Definition of Done before the next one starts.
 - [x] Composite `(id, salon_id)` FKs — cross-tenant references impossible
 - [x] Drizzle schema for typed queries
 - [x] Migration runner + `schema_migrations` checksum tracking
-- [x] Seed: Luxe Hair Studio (London/GBP) + Bella Beauty Bar (New York/USD),
-      different hours, services, policies — onboarding proven config-only
+- [x] Seed: a fully configured demo salon — hours, closures, services, staff
+      with competencies and shifts, customers, appointments and call history
 - [x] 88 unit tests over the pure domain engine (availability, policy, time, phone)
 
 ## Phase 2 — CRM API
