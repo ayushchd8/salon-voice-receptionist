@@ -1004,6 +1004,56 @@ describe('a time the caller names is the time they get', () => {
   });
 });
 
+describe('describing opening hours', () => {
+  const week = (spec: Array<[string, string]>) => spec.map(([day, hours]) => ({ day, hours }));
+
+  it('collapses runs of days that share hours', async () => {
+    const { __testing } = await import('../llm/scripted.js');
+    const said = __testing.describeWeek(
+      week([
+        ['Sunday', 'closed'], ['Monday', '09:00–18:00'], ['Tuesday', '09:00–18:00'],
+        ['Wednesday', '09:00–18:00'], ['Thursday', '09:00–18:00'], ['Friday', '09:00–18:00'],
+        ['Saturday', '09:00–18:00'],
+      ]),
+    );
+    expect(said).toBe("We're open Monday to Saturday 09:00–18:00, and closed Sundays.");
+  });
+
+  it('names days whose hours differ instead of averaging them away', async () => {
+    // The bug this replaces announced the first open day, the last open day and
+    // the *first day's* hours — so a salon open until 9pm on Thursdays was
+    // described as closing at 5pm. Callers turn up on the strength of this.
+    const { __testing } = await import('../llm/scripted.js');
+    const said = __testing.describeWeek(
+      week([
+        ['Sunday', '11:00–17:00'], ['Monday', 'closed'], ['Tuesday', '10:00–19:00'],
+        ['Wednesday', '10:00–19:00'], ['Thursday', '10:00–21:00'], ['Friday', '10:00–21:00'],
+        ['Saturday', '09:00–18:00'],
+      ]),
+    );
+    expect(said).toContain('Tuesday to Wednesday 10:00–19:00');
+    expect(said).toContain('Thursday to Friday 10:00–21:00');
+    expect(said).toContain('Saturday 09:00–18:00');
+    expect(said).toContain('Sunday 11:00–17:00');
+    expect(said).toContain('closed Mondays');
+  });
+
+  it('does not run two separated days together', async () => {
+    const { __testing } = await import('../llm/scripted.js');
+    const said = __testing.describeWeek(
+      week([
+        ['Sunday', 'closed'], ['Monday', '09:00–17:00'], ['Tuesday', 'closed'],
+        ['Wednesday', '09:00–17:00'], ['Thursday', 'closed'], ['Friday', 'closed'],
+        ['Saturday', 'closed'],
+      ]),
+    );
+    // Monday and Wednesday share hours but are not consecutive.
+    expect(said).not.toContain('Monday to Wednesday');
+    expect(said).toContain('Monday 09:00–17:00');
+    expect(said).toContain('Wednesday 09:00–17:00');
+  });
+});
+
 describe('saying why a time is unavailable', () => {
   it('says the salon is closed rather than claiming to be full', async () => {
     // "We're full" when the doors are simply shut is wrong information, and a

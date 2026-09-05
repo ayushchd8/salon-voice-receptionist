@@ -528,15 +528,7 @@ export class ScriptedAdapter implements LlmAdapter {
         };
       }
 
-      const open = hours.filter((h) => h.hours !== 'closed');
-      const closed = hours.filter((h) => h.hours === 'closed').map((h) => `${h.day}s`);
-      return {
-        text:
-          `We're open ${open[0]?.day} to ${open.at(-1)?.day}, ${open[0]?.hours}` +
-          (closed.length > 0 ? `, closed ${closed.join(' and ')}` : '') +
-          '. Can I book you in?',
-        toolCalls: [],
-      };
+      return { text: `${describeWeek(hours)} Can I book you in?`, toolCalls: [] };
     }
     if (result.known === true && typeof result.firstName === 'string') {
       return { text: `Hello ${result.firstName}! What can I do for you?`, toolCalls: [] };
@@ -804,6 +796,47 @@ function recentSlots(request: LlmRequest): OfferedSlot[] {
   return [];
 }
 
+/**
+ * Say the opening hours the way a person would.
+ *
+ * Runs of days that share the same hours are collapsed ("Tuesday to Friday"),
+ * and days that differ are named separately. The previous version announced the
+ * first open day, the last open day and the *first day's* hours — which for a
+ * salon whose hours vary read as "open Sunday to Saturday, 11:00-17:00" when it
+ * was actually open until 9pm on Thursdays. Wrong opening hours are the kind of
+ * thing a caller turns up on the strength of.
+ */
+function describeWeek(hours: Array<{ day: string; hours: string }>): string {
+  // Monday-first: the week as people describe it, not as Date#getDay numbers it.
+  const ordered = [...hours.slice(1), hours[0]!];
+  const open = ordered.filter((h) => h.hours !== 'closed');
+  if (open.length === 0) return "We're closed all week at the moment.";
+
+  const runs: Array<{ from: string; to: string; hours: string; lastIndex: number }> = [];
+  ordered.forEach((day, index) => {
+    if (day.hours === 'closed') return;
+    const last = runs.at(-1);
+    // Adjacency is measured on the calendar, not on the list of open days:
+    // Monday and Wednesday may share hours, but with Tuesday closed between
+    // them "Monday to Wednesday" is not true.
+    if (last && last.hours === day.hours && last.lastIndex === index - 1) {
+      last.to = day.day;
+      last.lastIndex = index;
+    } else {
+      runs.push({ from: day.day, to: day.day, hours: day.hours, lastIndex: index });
+    }
+  });
+
+  const spoken = runs.map((r) => (r.from === r.to ? `${r.from} ${r.hours}` : `${r.from} to ${r.to} ${r.hours}`));
+  const closed = ordered.filter((h) => h.hours === 'closed').map((h) => `${h.day}s`);
+
+  return (
+    `We're open ${spoken.join(', ')}` +
+    (closed.length > 0 ? `, and closed ${closed.join(' and ')}` : '') +
+    '.'
+  );
+}
+
 /** The day the offered slots are on, taken from their spoken labels. */
 function dayOfOffer(slots: OfferedSlot[]): string | undefined {
   const label = slots[0]?.when ?? '';
@@ -1039,4 +1072,4 @@ function timePhrase(utterance: string): string | undefined {
  * people at the wrong hour, so it is worth testing directly rather than only
  * through a conversation.
  */
-export const __testing = { spokenTimeToLocal, pickSlot, pickAppointment, scoreServiceMatch };
+export const __testing = { spokenTimeToLocal, pickSlot, pickAppointment, scoreServiceMatch, describeWeek };

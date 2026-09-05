@@ -123,7 +123,7 @@ transcript and the agent's full tool trail — including the ones that failed.
 | `pnpm dev:api` / `dev:agent` / `dev:admin` | One service |
 | `pnpm db:up` / `db:down` / `db:reset` | PostgreSQL lifecycle |
 | `pnpm migrate` / `pnpm seed` | Schema and demo data |
-| `pnpm test` | All 256 tests |
+| `pnpm test` | All 259 tests |
 | `pnpm test:unit` | Domain engine only — no database needed |
 | `pnpm test:integration` | CRM API against real PostgreSQL |
 | `pnpm test:agent` | Conversation flows against a controllable fake CRM |
@@ -138,14 +138,14 @@ transcript and the agent's full tool trail — including the ones that failed.
 pnpm db:up && pnpm check
 ```
 
-256 tests across three levels, each at the boundary where it belongs:
+259 tests across three levels, each at the boundary where it belongs:
 
 - **88 unit tests** (`packages/core`) — availability, buffers, policy, DST, fuzzy time, phone
   normalisation. Pure functions over fixtures; no database, no clock.
 - **60 integration tests** (`apps/api`) — against real PostgreSQL, because the behaviour under
   test *is* PostgreSQL behaviour. Includes an eight-way concurrent booking race asserting that
   exactly one wins, and schema-drift checks that the Drizzle types still match the SQL.
-- **108 conversation tests** (`apps/agent`) — the full agent over real HTTP against a CRM that
+- **111 conversation tests** (`apps/agent`) — the full agent over real HTTP against a CRM that
   can be told to time out, fail once, or lose a slot mid-conversation.
 
 The integration suite uses a separate `salon_test` database, created automatically.
@@ -185,7 +185,8 @@ logging staff out.
 
 No code changes. `pnpm seed` already creates two: **Luxe Hair Studio** (London, GBP, closed
 Sundays) and **Bella Beauty Bar** (New York, USD, closed Mondays, 24-hour notice, 48-hour
-cancellation window, 30-minute slots). Every salon-scoped table carries `salon_id`, and
+cancellation window, 30-minute slots). [`DEMO.md`](./DEMO.md#testing-the-second-salon) shows how
+to sign into Bella's CRM and run a second phone line for it alongside Luxe. Every salon-scoped table carries `salon_id`, and
 `salon_id` is derived from the authenticated credential rather than accepted from a request —
 so a caller cannot reach another salon's data by changing a parameter. The tenancy-isolation
 tests try exactly that.

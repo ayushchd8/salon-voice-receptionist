@@ -160,6 +160,6 @@ Scenario 5 stops and starts the `db` container, so expect a few seconds of
 database downtime while it runs. The script waits for it to come back.
 
 The same behaviours are pinned by the automated suite: `pnpm test:agent` runs
-108 conversation tests over real HTTP against a CRM that can be told to time
+111 conversation tests over real HTTP against a CRM that can be told to time
 out, fail, or lose a slot mid-conversation — see
 [`apps/agent/src/agent/conversation.test.ts`](./apps/agent/src/agent/conversation.test.ts).
